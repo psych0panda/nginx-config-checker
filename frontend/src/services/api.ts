@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000/api/v1/config-checker';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1/config/check-config/';
 
 
 export const checkNginxConfig = async (file: File): Promise<string> => {
@@ -8,7 +8,7 @@ export const checkNginxConfig = async (file: File): Promise<string> => {
     formData.append('file', file);
 
     try {
-        const response = await axios.post('/check-config/', formData);
+        const response = await axios.post(API_URL, formData);
         return response.data;
     } catch (error: unknown) {
         if (error instanceof Error) {
@@ -24,7 +24,7 @@ export const uploadNginxConfigFile = async (file: File) => {
     formData.append('file', file);
 
     try {
-        const response = await axios.post(API_URL + '/upload', formData, {
+        const response = await axios.post(API_URL, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },

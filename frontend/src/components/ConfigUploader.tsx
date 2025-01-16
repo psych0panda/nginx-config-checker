@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import {checkNginxConfig} from '../services/api';
+
 
 interface ConfigUploaderProps {
     onResult: (result: string) => void;
@@ -16,16 +18,16 @@ const ConfigUploader: React.FC<ConfigUploaderProps> = ({ onResult }) => {
     const handleUpload = async () => {
         if (!file) return;
 
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const response = await fetch('/uploadfile/', {
-            method: 'POST',
-            body: formData,
-        });
-
-        const result = await response.json();
-        onResult(result.message);
+        try {
+            const response = await checkNginxConfig(file);
+            onResult(response);
+        } catch (error) {
+            if (error instanceof Error) {
+                onResult('Ошибка при загрузке: ' + error.message);
+            } else {
+                onResult('Неизвестная ошибка при загрузке файла конфигурации NGINX');
+            }
+        }
     };
 
     return (

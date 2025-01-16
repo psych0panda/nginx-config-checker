@@ -2,15 +2,17 @@ import re
 from fastapi import APIRouter, UploadFile, File, HTTPException
 import subprocess
 import os
+from dotenv import load_dotenv
 
 router = APIRouter()
 
 @router.post("/check-config/")
 async def check_nginx_config(file: UploadFile = File(...)):
     try:
-        base_dir = '/nginx-config-checker/backend'
+        load_dotenv()
+        base_dir = os.getenv('BASE_DIR', '/tmp')
         # Сохраняем загруженный файл во временное хранилище
-        temp_file_path = f"{base_dir}/nginx/{file.filename}"
+        temp_file_path = f"{base_dir}/{file.filename}"
         print(temp_file_path)
         with open(temp_file_path, "wb") as temp_file:
             content = await file.read()
