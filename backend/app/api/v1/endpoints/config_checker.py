@@ -28,12 +28,13 @@ async def check_nginx_config(file: UploadFile = File(...)):
             if not re.search(r'http\s*{', config_content):
                 raise HTTPException(status_code=400, detail="Конфигурационный файл должен содержать блок 'http'.")
 
-        # Проверяем конфигурацию NGINX
-        result = subprocess.run(
-            ["nginx", "-t", "-c", temp_file_path, "-g", "pid /tmp/nginx.pid; daemon off;"],
-            capture_output=True,
-            text=True
-        )
+        # Создаем Docker контейнер для проверки конфигурации NGINX
+        docker_command = [
+            "docker", "run", "--rm",
+            "-v", f"{temp_file_path}:/etc/nginx/nginx.conf",
+            "nginx:latest", "nginx", "-t"
+        ]
+        result = subprocess.run(docker_command, capture_output=True, text=True)
 
         # Удаляем временный файл
         os.remove(temp_file_path)
