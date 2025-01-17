@@ -10,9 +10,12 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - BASE_DIR=/app/nginx
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    networks:
+      - nginx-config-checker-network
 
   frontend:
     build:
@@ -25,3 +28,9 @@ services:
       - ./frontend/build:/usr/share/nginx/html
     depends_on:
       - backend
+    networks:
+      - nginx-config-checker-network
+
+networks:
+  nginx-config-checker-network:
+    driver: bridge
