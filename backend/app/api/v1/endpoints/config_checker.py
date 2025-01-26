@@ -9,7 +9,7 @@ router = APIRouter()
 @router.post("/check-config/")
 async def check_nginx_config(file: UploadFile = File(...)):
     try:
-        base_dir = '/app'
+        base_dir = os.getenv("BASE_DIR")
         # Сохраняем загруженный файл во временное хранилище
         temp_file_path = f"{base_dir}/nginx/{file.filename}"
         print(temp_file_path)
