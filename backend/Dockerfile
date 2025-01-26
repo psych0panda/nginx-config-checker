@@ -14,7 +14,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
-    docker.io
+    nginx
+
+RUN adduser --system --no-create-home --disabled-login --group nginx
 
 # Copy the FastAPI application code into the container
 COPY . .

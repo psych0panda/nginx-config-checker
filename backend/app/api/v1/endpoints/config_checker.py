@@ -1,39 +1,51 @@
 import os
-import docker
+import re
+import subprocess
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from dotenv import load_dotenv
 
 router = APIRouter()
-client = docker.from_env()
 
 
 @router.post("/check-config/")
 async def check_nginx_config(file: UploadFile = File(...)):
-    load_dotenv()
-    base_dir = os.getenv('BASE_DIR', '/tmp')
-    temp_file_path = f"{base_dir}/{file.filename}"
-    with open(temp_file_path, "wb") as temp_file:
-        content: bytes = await file.read()
-        temp_file.write(content)
-    
     try:
-        container = client.containers.run(
-            "nginx:latest",
-            detach=True,
-            command=f"nginx -t -c {temp_file_path}",
-            ports={"80/tcp": 8080},
-            remove=False
+        base_dir = '/app'
+        # Сохраняем загруженный файл во временное хранилище
+        temp_file_path = f"{base_dir}/nginx/{file.filename}"
+        print(temp_file_path)
+        with open(temp_file_path, "wb") as temp_file:
+            content = await file.read()
+            temp_file.write(content)
+        if not os.path.exists(temp_file_path):
+            raise HTTPException(status_code=404, detail="Ошибка сохранения файла.")        
+
+        # Проверяем структуру конфигурационного файла
+        with open(temp_file_path, "r") as temp_file:
+            config_content = temp_file.readlines()
+        config_content = [line for line in config_content if not re.search(r'^\s*pid\s+', line)]
+        with open(temp_file_path, "w") as temp_file:
+            temp_file.writelines(config_content)
+
+        config_content_str = "".join(config_content)
+        if not re.search(r'events\s*{', config_content_str):
+            raise HTTPException(status_code=400, detail="Конфигурационный файл должен содержать блок 'events'.")
+        if not re.search(r'http\s*{', config_content_str):
+            raise HTTPException(status_code=400, detail="Конфигурационный файл должен содержать блок 'http'.")
+
+        # Проверяем конфигурацию NGINX
+        result = subprocess.run(
+            ["nginx", "-t", "-c", temp_file_path, "-g", "pid /tmp/nginx.pid; daemon off;"],
+            capture_output=True,
+            text=True
         )
-        container.wait()
-        logs = container.logs()
-        container.remove()
+
+        # Удаляем временный файл
         os.remove(temp_file_path)
-        return {"status": "success", "message": f"{logs.decode()}"}
-    except docker.errors.ContainerError as e:
-        raise HTTPException(status_code=400, detail=e.stderr.decode())
+
+        if result.returncode == 0:
+            return {"status": "success", "message": "Конфигурация корректна."}
+        else:
+            raise HTTPException(status_code=400, detail=result.stderr)
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if os.path.exists(temp_file_path):
-            print("Удаление временного файла...")
-            os.remove(temp_file_path)
