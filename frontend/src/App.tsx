@@ -9,11 +9,11 @@ const App: React.FC = () => {
     };
 
     return (
-        <div>
-            <h1>Проверка конфигурации NGINX</h1>
+        <div className="container mt-5">
+            <h1 className="text-center">Проверка конфигурации NGINX</h1>
             <ConfigUploader onResult={handleResult} />
             {result && (
-                <div>
+                <div className='mt-4'>
                     <h2>Результат проверки:</h2>
                     <p>{result}</p>
                 </div>

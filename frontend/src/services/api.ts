@@ -18,19 +18,3 @@ export const checkNginxConfig = async (file: File): Promise<string> => {
         }
     }
 };
-
-export const uploadNginxConfigFile = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-        const response = await axios.post(API_URL, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-        return response.data;
-    } catch (error) {
-        throw new Error('Ошибка при загрузке файла конфигурации NGINX: ' + error.message);
-    }
-};

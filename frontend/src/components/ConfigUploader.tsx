@@ -31,9 +31,11 @@ const ConfigUploader: React.FC<ConfigUploaderProps> = ({ onResult }) => {
     };
 
     return (
-        <div>
-            <input type="file" onChange={handleFileChange} />
-            <button onClick={handleUpload}>Upload</button>
+        <div className='mt-4'>
+            <div className='mb-3'>
+                <input type="file" className='form-control' onChange={handleFileChange} />
+            </div>
+            <button className='btn btn-primary' onClick={handleUpload}>Upload</button>
         </div>
     );
 };
